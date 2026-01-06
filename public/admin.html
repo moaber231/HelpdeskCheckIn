@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — HelpDesk</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script defer src="/socket.io/socket.io.js"></script>
+  <script defer src="/admin.js"></script>
+  <style> .button{background:var(--accent);padding:8px 12px;border-radius:8px;color:#fff;border:none} </style>
+</head>
+<body class="dark">
+
+  <header class="app-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="/assets/logog.png" alt="logo" style="height:36px; border-radius:6px; display:block" onerror="this.style.display='none'" />
+      <div class="brand">HelpDesk Check-ins</div>
+    </div>
+    <div class="muted">Admin dashboard</div>
+  </header>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <a href="#" class="active">Overview</a>
+      <a href="#">Personnel</a>
+      <a href="#">Exports</a>
+      <a href="#">Settings</a>
+    </nav>
+
+    <main class="main">
+      <div class="panel">
+        <h1>Live Check-ins</h1>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th data-sort="name">Name</th><th data-sort="rank">Rank</th><th data-sort="time">Time</th></tr>
+            </thead>
+            <tbody id="log"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:8px; align-items:center">
+          <label class="muted">Show day:</label>
+          <input type="date" id="dayPicker" />
+          <button id="downloadDay" class="button">Download PDF</button>
+          <button id="from2026" class="button">Load from 2026</button>
+          <div class="right">
+            <button id="logout" class="button">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-personnel" style="margin-top:14px">
+        <h2>Personnel</h2>
+        <form id="addPerson" class="form-row">
+          <input id="personFirst" class="input" placeholder="First name" required style="max-width:48%" />
+          <input id="personLast" class="input" placeholder="Last name" required style="max-width:48%" />
+          <select id="personRank" class="input" style="margin-top:8px; max-width:220px">
+            <option value="">Select rank (optional)</option>
+            <!-- OR ranks -->
+            <optgroup label="Other Ranks (OR)">
+              <option value="OR1">OR-1</option>
+              <option value="OR2">OR-2</option>
+              <option value="OR3">OR-3</option>
+              <option value="OR4">OR-4</option>
+              <option value="OR5">OR-5</option>
+              <option value="OR6">OR-6</option>
+              <option value="OR7">OR-7</option>
+              <option value="OR8">OR-8</option>
+              <option value="OR9">OR-9</option>
+            </optgroup>
+            <!-- OF ranks -->
+            <optgroup label="Officer Ranks (OF)">
+              <option value="OF1">OF-1</option>
+              <option value="OF2">OF-2</option>
+              <option value="OF3">OF-3</option>
+              <option value="OF4">OF-4</option>
+              <option value="OF5">OF-5</option>
+              <option value="OF6">OF-6</option>
+              <option value="OF7">OF-7</option>
+              <option value="OF8">OF-8</option>
+              <option value="OF9">OF-9</option>
+            </optgroup>
+          </select>
+          <input id="personDevice" class="input" placeholder="Device ID (unique token)" style="margin-top:8px; max-width:260px" />
+          <div style="width:100%; margin-top:8px"><button type="submit" class="button">Add</button></div>
+        </form>
+        <ul id="personnelList" style="margin-top:10px; list-style:none; padding:0"></ul>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h2>Account</h2>
+        <form id="changePassword" class="form-row">
+          <div style="position:relative; width:100%; margin-bottom:8px">
+            <input id="currentPass" class="input" placeholder="Current password" type="password" required />
+            <button type="button" id="toggleCurrent" style="position:absolute; right:8px; top:8px; background:transparent; border:none; color:var(--muted)">👁️</button>
+          </div>
+          <div style="position:relative; width:100%; margin-bottom:8px">
+            <input id="newPass" class="input" placeholder="New password" type="password" required />
+            <button type="button" id="toggleNew" style="position:absolute; right:8px; top:8px; background:transparent; border:none; color:var(--muted)">👁️</button>
+          </div>
+          <div style="width:100%"><button type="submit" class="button">Change Password</button></div>
+          <div id="pwMsg" class="muted" style="font-size:13px; margin-top:6px"></div>
+        </form>
+      </div>
+
+      <div id="qrModal"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    window.addEventListener('load', function(){
+      if (window.flatpickr) {
+        flatpickr('#dayPicker', {
+          altInput: true,
+          altFormat: 'F j, Y',
+          dateFormat: 'Y-m-d',
+          defaultDate: new Date(),
+          allowInput: true,
+          onChange: function(selectedDates, dateStr) {
+            try { window.from = dateStr || ''; window.to = ''; window.loadHistory(); } catch (e) {}
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+<html>
+

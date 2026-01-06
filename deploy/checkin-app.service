@@ -1,0 +1,15 @@
+[Unit]
+Description=HelpDesk Checkin App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/home/konstantinos/Desktop/checkin-app
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /home/konstantinos/Desktop/checkin-app/server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

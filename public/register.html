@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register Device</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="dark">
+  <div class="checkin-card" id="card">
+    <h3 id="title">Registering device...</h3>
+    <p id="body" class="muted">Please wait while we register your device and check you in.</p>
+  </div>
+
+  <script>
+    (async function(){
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (!token) {
+        document.getElementById('title').innerText = 'Invalid registration link';
+        return;
+      }
+      // save token to localStorage
+      window.localStorage.setItem('device_token', token);
+      // try checkin
+      try {
+        const res = await fetch('/checkin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ device_id: token }) });
+        const j = await res.json();
+        if (res.ok) {
+          document.getElementById('title').innerText = `Hello ${j.checkin.name}`;
+          document.getElementById('body').innerText = `Device registered and checked in at ${new Date(j.checkin.time).toLocaleString()}`;
+          document.getElementById('title').className = 'success';
+        } else {
+          document.getElementById('title').innerText = 'Registered — check-in failed';
+          document.getElementById('body').innerText = j.error || 'Please contact admin';
+          document.getElementById('title').className = 'failure';
+        }
+      } catch (e) {
+        document.getElementById('title').innerText = 'Network error';
+        document.getElementById('body').innerText = '';
+      }
+    })();
+  </script>
+</body>
+</html>

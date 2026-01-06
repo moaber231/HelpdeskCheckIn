@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HelpDesk Check In</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .center { max-width:700px; margin:60px auto; text-align:center }
+    .big { font-size:28px; font-weight:700; }
+    .subtitle { color:#bbb; margin-top:8px }
+    .login-link { margin-top:20px; display:inline-block }
+  </style>
+</head>
+<body class="dark">
+  <div class="center">
+    <div class="logo">HelpDesk</div>
+    <div class="big">Check In</div>
+    <div class="subtitle">Scan the QR code to quickly check in</div>
+
+    <div style="margin-top:30px" class="panel">
+      <p class="muted">Ask your admin to generate your personal QR code. Admin can add personnel and generate QR for each person.</p>
+      <div id="sampleQr" style="margin-top:14px"></div>
+    </div>
+
+    <script>
+      (async function(){
+        try {
+          // try to show sample QR for personnel id 1 if available
+          const img = document.createElement('img');
+          img.style.maxWidth='280px'; img.style.width='100%'; img.style.borderRadius='8px';
+          const r = await fetch('/qrcodes/1.png', { method: 'HEAD' });
+          if (r.ok) {
+            img.src = '/qrcodes/1.png';
+            document.getElementById('sampleQr').appendChild(img);
+          } else {
+            document.getElementById('sampleQr').innerHTML = '<div class="muted">No sample QR available yet. Admin should generate QR for personnel.</div>';
+          }
+        } catch(e) { document.getElementById('sampleQr').innerHTML = '<div class="muted">No sample QR available.</div>' }
+      })();
+    </script>
+
+    <div class="login-link">
+      <a href="/admin">Login as admin</a>
+    </div>
+  </div>
+</body>
+</html>

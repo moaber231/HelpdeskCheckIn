@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./db:/usr/src/app/db
+      - ./public/qrcodes:/usr/src/app/public/qrcodes
+      - ./utils:/usr/src/app/utils
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SESSION_SECRET=change_this_secret
+      - ADMIN_PASSWORD=password

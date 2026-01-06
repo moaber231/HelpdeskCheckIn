@@ -1,0 +1,23 @@
+{
+  "name": "checkin-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "sqlite3": "^5.1.7",
+    "express-session": "^1.17.3",
+    "connect-sqlite3": "^0.9.11",
+    "bcrypt": "^5.1.0",
+    "qrcode": "^1.5.1",
+    "pdfkit": "^0.13.0"
+  }
+}
