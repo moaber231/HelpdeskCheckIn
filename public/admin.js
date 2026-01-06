@@ -222,9 +222,12 @@ document.getElementById('logout').addEventListener('click', async () => {
   window.location = '/admin';
 });
 
-document.getElementById('closeQr').addEventListener('click', () => {
-  document.getElementById('qrModal').style.display = 'none';
-});
+const _closeQrBtn = document.getElementById('closeQr');
+if (_closeQrBtn) {
+  _closeQrBtn.addEventListener('click', () => {
+    const m = document.getElementById('qrModal'); if (m) m.style.display = 'none';
+  });
+}
 
 // Initial load
 loadHistory();

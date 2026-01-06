@@ -191,7 +191,8 @@ router.post("/personnel", requireAdmin, (req, res) => {
           // generate QR file
           const protocol = req.protocol; const host = req.get('host');
           const registerUrl = `${protocol}://${host}/register.html?token=${encodeURIComponent(token)}`;
-          const qdir = path.join(__dirname, '..', 'public', 'qrcodes');
+          const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+          const qdir = path.join(basePublic, 'qrcodes');
           try { fs.mkdirSync(qdir, { recursive: true }); } catch (e) {}
           const filePath = path.join(qdir, `register-${newId}.png`);
           QRCode.toFile(filePath, registerUrl, { errorCorrectionLevel: 'H', type: 'png' }, (err) => {
@@ -228,8 +229,9 @@ router.get("/qrcode/:id", requireAdmin, (req, res) => {
   const protocol = req.protocol;
   const host = req.get("host");
   const url = `${protocol}://${host}/checkin.html?id=${encodeURIComponent(id)}`;
-  // ensure qrcodes directory exists
-  const qdir = path.join(__dirname, '..', 'public', 'qrcodes');
+  // ensure qrcodes directory exists (prefer DATA_DIR/public if configured)
+  const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+  const qdir = path.join(basePublic, 'qrcodes');
   try { fs.mkdirSync(qdir, { recursive: true }); } catch (e) {}
   const filePath = path.join(qdir, `${id}.png`);
   QRCode.toFile(filePath, url, { errorCorrectionLevel: 'H', type: 'png' }, (err) => {
@@ -254,7 +256,8 @@ router.get('/qrcode/common', requireAdmin, (req, res) => {
   const protocol = req.protocol;
   const host = req.get('host');
   const url = `${protocol}://${host}/checkin.html`;
-  const qdir = path.join(__dirname, '..', 'public', 'qrcodes');
+  const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+  const qdir = path.join(basePublic, 'qrcodes');
   try { fs.mkdirSync(qdir, { recursive: true }); } catch (e) {}
   const filePath = path.join(qdir, `common.png`);
   QRCode.toFile(filePath, url, { errorCorrectionLevel: 'H', type: 'png' }, (err) => {
@@ -275,7 +278,8 @@ router.post('/personnel/:id/generate-token', requireAdmin, (req, res) => {
       // generate QR that points to registration URL containing token
       const protocol = req.protocol; const host = req.get('host');
       const registerUrl = `${protocol}://${host}/register.html?token=${encodeURIComponent(token)}`;
-      const qdir = path.join(__dirname, '..', 'public', 'qrcodes');
+      const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+      const qdir = path.join(basePublic, 'qrcodes');
       try { fs.mkdirSync(qdir, { recursive: true }); } catch (e) {}
       const filePath = path.join(qdir, `register-${id}.png`);
       QRCode.toFile(filePath, registerUrl, { errorCorrectionLevel: 'H', type: 'png' }, (err) => {
@@ -291,8 +295,9 @@ router.post('/personnel/:id/revoke-token', requireAdmin, (req, res) => {
   const id = req.params.id;
   db.run('UPDATE personnel SET device_id = NULL WHERE id = ?', [id], function(err){
     if (err) return res.status(500).json({ error: 'DB error' });
-    // remove any register QR image file
-    const file = path.join(__dirname, '..', 'public', 'qrcodes', `register-${id}.png`);
+    // remove any register QR image file (check DATA_DIR/public first)
+    const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+    const file = path.join(basePublic, 'qrcodes', `register-${id}.png`);
     try { if (fs.existsSync(file)) fs.unlinkSync(file); } catch(e){}
     res.json({ success: true });
   });
@@ -308,7 +313,8 @@ router.post('/personnel/:id/regenerate-token', requireAdmin, (req, res) => {
       if (err) return res.status(500).json({ error: 'DB error' });
       const protocol = req.protocol; const host = req.get('host');
       const registerUrl = `${protocol}://${host}/register.html?token=${encodeURIComponent(token)}`;
-      const qdir = path.join(__dirname, '..', 'public', 'qrcodes');
+      const basePublic = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'public') : path.join(__dirname, '..', 'public');
+      const qdir = path.join(basePublic, 'qrcodes');
       try { fs.mkdirSync(qdir, { recursive: true }); } catch (e) {}
       const filePath = path.join(qdir, `register-${id}.png`);
       QRCode.toFile(filePath, registerUrl, { errorCorrectionLevel: 'H', type: 'png' }, (err) => {
@@ -320,5 +326,16 @@ router.post('/personnel/:id/regenerate-token', requireAdmin, (req, res) => {
 });
 
 module.exports = router;
+
+// Serve admin SPA paths (client-side routing). This catches GET /admin/* that aren't API endpoints
+// and returns the admin app (or login page when not authenticated).
+router.get('/*', (req, res) => {
+  // Only handle GET; other methods should continue to 404 or API logic
+  if (req.method !== 'GET') return res.status(404).end();
+  if (req.session && req.session.admin) {
+    return res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+  }
+  return res.sendFile(path.join(__dirname, '..', 'public', 'admin_login.html'));
+});
 
 

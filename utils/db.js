@@ -1,6 +1,14 @@
 const sqlite3 = require("sqlite3").verbose();
+const fs = require('fs');
+const path = require('path');
 
-const db = new sqlite3.Database("./db/database.sqlite");
+// Use DATA_DIR if provided (Render, Docker volumes), otherwise default to project ./data
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+const DB_DIR = path.join(DATA_DIR, 'db');
+try { fs.mkdirSync(DB_DIR, { recursive: true }); } catch (e) {}
+const DB_PATH = path.join(DB_DIR, 'database.sqlite');
+
+const db = new sqlite3.Database(DB_PATH);
 
 db.serialize(() => {
   db.run(`

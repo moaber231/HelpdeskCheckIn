@@ -6,8 +6,16 @@ const session = require("express-session");
 const SQLiteStore = require('connect-sqlite3')(session);
 const bcrypt = require("bcrypt");
 const path = require("path");
+const fs = require('fs');
 
 const app = express();
+// Respect a writable DATA_DIR (Render, Docker volumes, etc.) so DB/sessions/qrcodes persist
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+try { fs.mkdirSync(path.join(DATA_DIR, 'db'), { recursive: true }); } catch (e) {}
+try { fs.mkdirSync(path.join(DATA_DIR, 'public', 'qrcodes'), { recursive: true }); } catch (e) {}
+
+// If an external host/proxy (Render) is used, trust the first proxy so req.protocol/host reflect the public URL
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
 
@@ -15,6 +23,12 @@ const db = require("./utils/db");
 
 app.use(cors());
 app.use(express.json());
+// Serve persisted public assets from DATA_DIR first (generated qrcodes will live here),
+// then fall back to the repository `public/` for bundled static files.
+const dataPublic = path.join(DATA_DIR, 'public');
+if (fs.existsSync(dataPublic)) {
+  app.use(express.static(dataPublic));
+}
 app.use(express.static("public"));
 
 // expose utils as /assets so admin can drop `logog.png` into utils/
@@ -22,11 +36,15 @@ app.use('/assets', express.static(path.join(__dirname, 'utils')));
 
 app.use(
   session({
-    store: new SQLiteStore({ db: 'sessions.sqlite', dir: './db' }),
+    // store sessions in the DATA_DIR so they persist across restarts in hosted environments
+    store: new SQLiteStore({ db: 'sessions.sqlite', dir: path.join(DATA_DIR, 'db') }),
     secret: process.env.SESSION_SECRET || "change_this_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 7 days
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      secure: process.env.NODE_ENV === 'production'
+    }
   })
 );
 
